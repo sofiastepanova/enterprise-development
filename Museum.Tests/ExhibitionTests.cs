@@ -1,26 +1,21 @@
-namespace Museum.Tests;
-
 using Museum.Domain;
+
+namespace Museum.Tests;
 
 /// <summary>
 /// Тесты LINQ-запросов над тестовыми данными музея
 /// </summary>
-public class ExhibitionTests : IClassFixture<MuseumFixture>
+public class ExhibitionTests(MuseumFixture fixture) : IClassFixture<MuseumFixture>
 {
-    private readonly MuseumFixture _fixture;
-
-    public ExhibitionTests(MuseumFixture fixture)
-    {
-        _fixture = fixture;
-    }
-
     /// <summary>
     /// Результат не должен превышать 5 выставок и должен быть отсортирован по убыванию посетителей
     /// </summary>
     [Fact]
     public void GetTopExhibitions_ByVisitorCount_ReturnsTopFive()
     {
-        var result = _fixture.Tickets
+        string[] expected = ["Барокко", "Древний Египет", "Космос", "Дикая природа", "Художники"];
+
+        var result = fixture.Tickets
             .SelectMany(t => t.Tour.Exhibitions.Select(e => new { Exhibition = e, Ticket = t }))
             .GroupBy(x => x.Exhibition)
             .Select(g => new { Exhibition = g.Key, VisitorCount = g.Count() })
@@ -28,12 +23,9 @@ public class ExhibitionTests : IClassFixture<MuseumFixture>
             .Take(5)
             .ToList();
 
-        Assert.True(result.Count <= 5);
-        Assert.True(result.Count > 0);
+        var actual = result.Select(x => x.Exhibition.Name).ToList();
 
-        var visitorCounts = result.Select(x => x.VisitorCount).ToList();
-        var sortedDescending = visitorCounts.OrderByDescending(x => x).ToList();
-        Assert.Equal(sortedDescending, visitorCounts);
+        Assert.Equal(expected, actual);
     }
 
     /// <summary>
@@ -42,7 +34,9 @@ public class ExhibitionTests : IClassFixture<MuseumFixture>
     [Fact]
     public void GetTours_WithMinVisitors_ReturnsLowestCount()
     {
-        var tourVisitorCounts = _fixture.Tickets
+        int[] expected = [3, 4, 5, 6, 7, 8, 9, 10];
+
+        var tourVisitorCounts = fixture.Tickets
             .GroupBy(t => t.Tour)
             .Select(g => new { Tour = g.Key, VisitorCount = g.Count() })
             .ToList();
@@ -54,12 +48,9 @@ public class ExhibitionTests : IClassFixture<MuseumFixture>
             .Select(x => x.Tour)
             .ToList();
 
-        Assert.NotEmpty(result);
-        Assert.All(result, tour =>
-        {
-            var actualCount = _fixture.Tickets.Count(t => t.Tour.Id == tour.Id);
-            Assert.Equal(minCount, actualCount);
-        });
+        var actual = result.Select(t => t.Id).ToList();
+
+        Assert.Equal(expected, actual);
     }
 
     /// <summary>
@@ -68,10 +59,18 @@ public class ExhibitionTests : IClassFixture<MuseumFixture>
     [Fact]
     public void GetAttendanceSummary_ByTheme_ReturnsGroupedStats()
     {
+        List<(ExhibitionTheme Theme, int TotalVisitors, decimal TotalPrice, double AverageVisitorsPerDay, int MinVisitorsPerDay, int MaxVisitorsPerDay)> expected =
+        [
+            (ExhibitionTheme.Art, 5, 2150m, 1.25, 1, 2),
+            (ExhibitionTheme.History, 7, 2800m, 1.75, 1, 2),
+            (ExhibitionTheme.Science, 3, 1250m, 1.5, 1, 2),
+            (ExhibitionTheme.Nature, 3, 1600m, 1.0, 1, 1)
+        ];
+
         var startDate = new DateTime(2025, 1, 1);
         var endDate = new DateTime(2025, 12, 31);
 
-        var ticketsInPeriod = _fixture.Tickets
+        var ticketsInPeriod = fixture.Tickets
             .Where(t => t.Tour.Date >= startDate && t.Tour.Date <= endDate)
             .ToList();
 
@@ -99,13 +98,11 @@ public class ExhibitionTests : IClassFixture<MuseumFixture>
             })
             .ToList();
 
-        Assert.NotEmpty(result);
-        Assert.All(result, theme =>
-        {
-            Assert.True(theme.AverageVisitorsPerDay >= theme.MinVisitorsPerDay);
-            Assert.True(theme.AverageVisitorsPerDay <= theme.MaxVisitorsPerDay);
-            Assert.True(theme.TotalPrice > 0);
-        });
+        var actual = result
+            .Select(x => (x.Theme, x.TotalVisitors, x.TotalPrice, x.AverageVisitorsPerDay, x.MinVisitorsPerDay, x.MaxVisitorsPerDay))
+            .ToList();
+
+        Assert.Equal(expected, actual);
     }
 
     /// <summary>
@@ -114,17 +111,20 @@ public class ExhibitionTests : IClassFixture<MuseumFixture>
     [Fact]
     public void GetTours_InHall_ReturnsMatchingTours()
     {
+        int[] expected = [1, 4, 5, 11];
+
         var hallNumber = 1;
         var startDate = new DateTime(2025, 1, 1);
         var endDate = new DateTime(2025, 12, 31);
 
-        var result = _fixture.Tours
+        var result = fixture.Tours
             .Where(t => t.Date >= startDate && t.Date <= endDate)
             .Where(t => t.Exhibitions.Any(e => e.HallNumber == hallNumber))
             .ToList();
 
-        Assert.NotEmpty(result);
-        Assert.All(result, tour => Assert.Contains(tour.Exhibitions, e => e.HallNumber == hallNumber));
+        var actual = result.Select(t => t.Id).ToList();
+
+        Assert.Equal(expected, actual);
     }
 
     /// <summary>
@@ -133,18 +133,18 @@ public class ExhibitionTests : IClassFixture<MuseumFixture>
     [Fact]
     public void GetVisitors_ForTour_ReturnsSortedByName()
     {
-        var selectedTourId = _fixture.Tours.First().Id;
+        string[] expected = ["Иванов Иван Иванович", "Петрова Мария Сергеевна"];
 
-        var result = _fixture.Tickets
+        var selectedTourId = fixture.Tours.First().Id;
+
+        var result = fixture.Tickets
             .Where(t => t.Tour.Id == selectedTourId)
             .Select(t => t.Visitor)
             .OrderBy(v => v.FullName)
             .ToList();
 
-        Assert.NotEmpty(result);
+        var actual = result.Select(v => v.FullName).ToList();
 
-        var names = result.Select(v => v.FullName).ToList();
-        var sortedNames = names.OrderBy(n => n).ToList();
-        Assert.Equal(sortedNames, names);
+        Assert.Equal(expected, actual);
     }
 }
