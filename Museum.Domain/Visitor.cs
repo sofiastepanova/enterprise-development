@@ -1,24 +1,24 @@
 namespace Museum.Domain;
 
 /// <summary>
-/// Посетитель 
+/// Посетитель музея
 /// </summary>
 public class Visitor
 {
     /// <summary>
-    /// Идентификатор 
+    /// Идентификатор посетителя
     /// </summary>
     public int Id { get; set; }
 
     /// <summary>
-    /// фио
+    /// ФИО посетителя
     /// </summary>
-    public string FullName { get; set; } = string.Empty;
+    public required string FullName { get; set; }
 
     /// <summary>
-    /// Номерочек 
+    /// номер
     /// </summary>
-    public string Phone { get; set; } = string.Empty;
+    public required string Phone { get; set; }
 
     /// <summary>
     /// Др посетителя

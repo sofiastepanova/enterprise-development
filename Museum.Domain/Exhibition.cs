@@ -11,27 +11,27 @@ public class Exhibition
     public int Id { get; set; }
 
     /// <summary>
-    /// Название 
+    /// Название выставки
     /// </summary>
-    public string Name { get; set; } = string.Empty;
+    public required string Name { get; set; }
 
     /// <summary>
-    /// Тематика 
+    /// Тематика выставки
     /// </summary>
     public ExhibitionTheme Theme { get; set; }
 
     /// <summary>
-    /// Номер зала, где выставка
+    /// Номер зала, где проходит выставка
     /// </summary>
     public int HallNumber { get; set; }
 
     /// <summary>
-    /// Дата начала 
+    /// Дата начала выставки
     /// </summary>
     public DateTime StartDate { get; set; }
 
     /// <summary>
-    /// Дата окончания 
+    /// Дата окончания выставки
     /// </summary>
     public DateTime EndDate { get; set; }
 }

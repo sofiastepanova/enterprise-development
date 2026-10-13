@@ -6,19 +6,19 @@ namespace Museum.Domain;
 public class Ticket
 {
     /// <summary>
-    /// Идентификатор 
+    /// Идентификатор билета
     /// </summary>
     public int Id { get; set; }
 
     /// <summary>
     /// Экскурсия, на которую куплен билет
     /// </summary>
-    public Tour Tour { get; set; } = null!;
+    public required Tour Tour { get; set; }
 
     /// <summary>
-    /// Посетитель
+    /// Посетитель, купивший билет
     /// </summary>
-    public Visitor Visitor { get; set; } = null!;
+    public required Visitor Visitor { get; set; }
 
     /// <summary>
     /// Тип билета (взрослый или льготный)
@@ -26,7 +26,7 @@ public class Ticket
     public TicketType Type { get; set; }
 
     /// <summary>
-    /// Цена 
+    /// Цена билета
     /// </summary>
     public decimal Price { get; set; }
 }
